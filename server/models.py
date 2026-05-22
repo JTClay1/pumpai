@@ -56,7 +56,7 @@ class User(db.Model, SerializerMixin):
 class Profile(db.Model, SerializerMixin):
     __tablename__ = "profiles"
 
-    serialize_rules = ("-user.profile",)
+    serialize_rules = ("-user.",)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
