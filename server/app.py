@@ -80,13 +80,91 @@ class Logout(Resource):
             return make_response({}, 204)
 
         return make_response({"error": "Unauthorized."}, 401)
+    
+class ProfileResource(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        profile = Profile.query.filter_by(user_id=user_id).first()
+
+        if not profile:
+            return make_response({"error": "Profile not found."}, 404)
+
+        return make_response(profile.to_dict(), 200)
+
+    def post(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        existing_profile = Profile.query.filter_by(user_id=user_id).first()
+
+        if existing_profile:
+            return make_response({"error": "Profile already exists."}, 422)
+
+        data = request.get_json() or {}
+
+        try:
+            profile = Profile(
+                name=data.get("name"),
+                gender=data.get("gender"),
+                age=data.get("age"),
+                height=data.get("height"),
+                current_weight=data.get("current_weight"),
+                fitness_goal=data.get("fitness_goal"),
+                dietary_preferences=data.get("dietary_preferences"),
+                target_calories=data.get("target_calories"),
+                target_protein=data.get("target_protein"),
+                target_carbs=data.get("target_carbs"),
+                target_fat=data.get("target_fat"),
+                coaching_style=data.get("coaching_style"),
+                user_id=user_id,
+            )
+
+            db.session.add(profile)
+            db.session.commit()
+
+            return make_response(profile.to_dict(), 201)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+    def patch(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        profile = Profile.query.filter_by(user_id=user_id).first()
+
+        if not profile:
+            return make_response({"error": "Profile not found."}, 404)
+
+        data = request.get_json() or {}
+
+        for attr in data:
+            if hasattr(profile, attr) and attr != "id" and attr != "user_id":
+                setattr(profile, attr, data[attr])
+
+        try:
+            db.session.commit()
+            return make_response(profile.to_dict(), 200)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
 
 
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
 api.add_resource(CheckSession, "/check_session")
 api.add_resource(Logout, "/logout")
-
+api.add_resource(ProfileResource, "/profile")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
