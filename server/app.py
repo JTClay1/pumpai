@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import make_response, request, session
 from flask_restful import Api, Resource
 from sqlalchemy.exc import IntegrityError
@@ -159,12 +161,120 @@ class ProfileResource(Resource):
             db.session.rollback()
             return make_response({"error": str(error)}, 422)
 
+class FoodLogs(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if page < 1:
+            page = 1
+
+        if per_page < 1 or per_page > 50:
+            per_page = 10
+
+        pagination = FoodLog.query.filter_by(user_id=user_id).order_by(FoodLog.id.desc()).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False,
+        )
+
+        food_logs = [food_log.to_dict() for food_log in pagination.items]
+
+        return make_response({
+            "food_logs": food_logs,
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+        }, 200)
+
+    def post(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        data = request.get_json() or {}
+
+        try:
+            food_log = FoodLog(
+                food_name=data.get("food_name"),
+                calories=data.get("calories"),
+                servings=data.get("servings"),
+                protein=data.get("protein"),
+                carbs=data.get("carbs"),
+                fat=data.get("fat"),
+                fiber=data.get("fiber"),
+                sodium=data.get("sodium"),
+                serving_size=data.get("serving_size"),
+                logged_date=data.get("logged_date", date.today().isoformat()),
+                user_id=user_id,
+            )
+
+            db.session.add(food_log)
+            db.session.commit()
+
+            return make_response(food_log.to_dict(), 201)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+
+class FoodLogByID(Resource):
+    def patch(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        food_log = FoodLog.query.filter_by(id=id, user_id=user_id).first()
+
+        if not food_log:
+            return make_response({"error": "Food log not found."}, 404)
+
+        data = request.get_json() or {}
+
+        for attr in data:
+            if hasattr(food_log, attr) and attr != "id" and attr != "user_id":
+                setattr(food_log, attr, data[attr])
+
+        try:
+            db.session.commit()
+            return make_response(food_log.to_dict(), 200)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+    def delete(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        food_log = FoodLog.query.filter_by(id=id, user_id=user_id).first()
+
+        if not food_log:
+            return make_response({"error": "Food log not found."}, 404)
+
+        db.session.delete(food_log)
+        db.session.commit()
+
+        return make_response({}, 204)
 
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
 api.add_resource(CheckSession, "/check_session")
 api.add_resource(Logout, "/logout")
 api.add_resource(ProfileResource, "/profile")
+api.add_resource(FoodLogs, "/food_logs")
+api.add_resource(FoodLogByID, "/food_logs/<int:id>")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
