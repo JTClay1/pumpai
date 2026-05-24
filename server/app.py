@@ -267,6 +267,112 @@ class FoodLogByID(Resource):
         db.session.commit()
 
         return make_response({}, 204)
+    
+class WorkoutLogs(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if page < 1:
+            page = 1
+
+        if per_page < 1 or per_page > 50:
+            per_page = 10
+
+        pagination = WorkoutLog.query.filter_by(user_id=user_id).order_by(WorkoutLog.id.desc()).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False,
+        )
+
+        workout_logs = [workout_log.to_dict() for workout_log in pagination.items]
+
+        return make_response({
+            "workout_logs": workout_logs,
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+        }, 200)
+
+    def post(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        data = request.get_json() or {}
+
+        try:
+            workout_log = WorkoutLog(
+                workout_type=data.get("workout_type"),
+                exercise_name=data.get("exercise_name"),
+                duration_minutes=data.get("duration_minutes"),
+                distance_miles=data.get("distance_miles"),
+                weight=data.get("weight"),
+                sets=data.get("sets"),
+                reps=data.get("reps"),
+                notes=data.get("notes"),
+                logged_date=data.get("logged_date", date.today().isoformat()),
+                user_id=user_id,
+            )
+
+            db.session.add(workout_log)
+            db.session.commit()
+
+            return make_response(workout_log.to_dict(), 201)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+
+class WorkoutLogByID(Resource):
+    def patch(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        workout_log = WorkoutLog.query.filter_by(id=id, user_id=user_id).first()
+
+        if not workout_log:
+            return make_response({"error": "Workout log not found."}, 404)
+
+        data = request.get_json() or {}
+
+        for attr in data:
+            if hasattr(workout_log, attr) and attr != "id" and attr != "user_id":
+                setattr(workout_log, attr, data[attr])
+
+        try:
+            db.session.commit()
+            return make_response(workout_log.to_dict(), 200)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+    def delete(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        workout_log = WorkoutLog.query.filter_by(id=id, user_id=user_id).first()
+
+        if not workout_log:
+            return make_response({"error": "Workout log not found."}, 404)
+
+        db.session.delete(workout_log)
+        db.session.commit()
+
+        return make_response({}, 204)
 
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
@@ -275,6 +381,8 @@ api.add_resource(Logout, "/logout")
 api.add_resource(ProfileResource, "/profile")
 api.add_resource(FoodLogs, "/food_logs")
 api.add_resource(FoodLogByID, "/food_logs/<int:id>")
+api.add_resource(WorkoutLogs, "/workout_logs")
+api.add_resource(WorkoutLogByID, "/workout_logs/<int:id>")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

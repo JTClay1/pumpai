@@ -56,7 +56,7 @@ class User(db.Model, SerializerMixin):
 class Profile(db.Model, SerializerMixin):
     __tablename__ = "profiles"
 
-    serialize_rules = ("-user.",)
+    serialize_rules = ("-user",)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -79,7 +79,7 @@ class Profile(db.Model, SerializerMixin):
 class FoodLog(db.Model, SerializerMixin):
     __tablename__ = "food_logs"
 
-    serialize_rules = ("-user.food_logs",)
+    serialize_rules = ("-user",)
 
     id = db.Column(db.Integer, primary_key=True)
     food_name = db.Column(db.String, nullable=False)
@@ -118,7 +118,7 @@ class FoodLog(db.Model, SerializerMixin):
 class WorkoutLog(db.Model, SerializerMixin):
     __tablename__ = "workout_logs"
 
-    serialize_rules = ("-user.workout_logs",)
+    serialize_rules = ("-user",)
 
     id = db.Column(db.Integer, primary_key=True)
     workout_type = db.Column(db.String, nullable=False)
