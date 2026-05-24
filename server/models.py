@@ -151,7 +151,7 @@ class WorkoutLog(db.Model, SerializerMixin):
 class CoachResponse(db.Model, SerializerMixin):
     __tablename__ = "coach_responses"
 
-    serialize_rules = ("-user.coach_responses",)
+    serialize_rules = ("-user",)
 
     id = db.Column(db.Integer, primary_key=True)
     request_type = db.Column(db.String, nullable=False)

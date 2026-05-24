@@ -373,6 +373,48 @@ class WorkoutLogByID(Resource):
         db.session.commit()
 
         return make_response({}, 204)
+    
+class History(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        food_limit = request.args.get("food_limit", 10, type=int)
+        workout_limit = request.args.get("workout_limit", 10, type=int)
+        coach_limit = request.args.get("coach_limit", 5, type=int)
+
+        if food_limit < 1 or food_limit > 50:
+            food_limit = 10
+
+        if workout_limit < 1 or workout_limit > 50:
+            workout_limit = 10
+
+        if coach_limit < 1 or coach_limit > 25:
+            coach_limit = 5
+
+        profile = Profile.query.filter_by(user_id=user_id).first()
+
+        food_query = FoodLog.query.filter_by(user_id=user_id)
+        workout_query = WorkoutLog.query.filter_by(user_id=user_id)
+        coach_query = CoachResponse.query.filter_by(user_id=user_id)
+
+        food_logs = food_query.order_by(FoodLog.id.desc()).limit(food_limit).all()
+        workout_logs = workout_query.order_by(WorkoutLog.id.desc()).limit(workout_limit).all()
+        coach_responses = coach_query.order_by(CoachResponse.id.desc()).limit(coach_limit).all()
+
+        return make_response({
+            "profile": profile.to_dict() if profile else None,
+            "food_logs": [food_log.to_dict() for food_log in food_logs],
+            "workout_logs": [workout_log.to_dict() for workout_log in workout_logs],
+            "coach_responses": [coach_response.to_dict() for coach_response in coach_responses],
+            "totals": {
+                "food_logs": food_query.count(),
+                "workout_logs": workout_query.count(),
+                "coach_responses": coach_query.count(),
+            },
+        }, 200)
 
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
@@ -383,6 +425,7 @@ api.add_resource(FoodLogs, "/food_logs")
 api.add_resource(FoodLogByID, "/food_logs/<int:id>")
 api.add_resource(WorkoutLogs, "/workout_logs")
 api.add_resource(WorkoutLogByID, "/workout_logs/<int:id>")
+api.add_resource(History, "/history")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
