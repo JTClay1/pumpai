@@ -160,3 +160,15 @@ class CoachResponse(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     user = db.relationship("User", back_populates="coach_responses")
+
+    @validates("request_type")
+    def validate_request_type(self, key, request_type):
+        if not request_type or not request_type.strip():
+            raise ValueError("Request type is required.")
+        return request_type.strip()
+
+    @validates("response_text")
+    def validate_response_text(self, key, response_text):
+        if not response_text or not response_text.strip():
+            raise ValueError("Response text is required.")
+        return response_text.strip()
