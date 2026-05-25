@@ -415,6 +415,83 @@ class History(Resource):
                 "coach_responses": coach_query.count(),
             },
         }, 200)
+    
+class CoachResponses(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if page < 1:
+            page = 1
+
+        if per_page < 1 or per_page > 50:
+            per_page = 10
+
+        pagination = CoachResponse.query.filter_by(user_id=user_id).order_by(CoachResponse.id.desc()).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False,
+        )
+
+        coach_responses = [
+            coach_response.to_dict() for coach_response in pagination.items
+        ]
+
+        return make_response({
+            "coach_responses": coach_responses,
+            "page": pagination.page,
+            "per_page": pagination.per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+        }, 200)
+
+    def post(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        data = request.get_json() or {}
+
+        try:
+            coach_response = CoachResponse(
+                request_type=data.get("request_type"),
+                response_text=data.get("response_text"),
+                created_at=data.get("created_at", date.today().isoformat()),
+                user_id=user_id,
+            )
+
+            db.session.add(coach_response)
+            db.session.commit()
+
+            return make_response(coach_response.to_dict(), 201)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+
+class CoachResponseByID(Resource):
+    def delete(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        coach_response = CoachResponse.query.filter_by(id=id, user_id=user_id).first()
+
+        if not coach_response:
+            return make_response({"error": "Coach response not found."}, 404)
+
+        db.session.delete(coach_response)
+        db.session.commit()
+
+        return make_response({}, 204)
 
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
@@ -426,6 +503,8 @@ api.add_resource(FoodLogByID, "/food_logs/<int:id>")
 api.add_resource(WorkoutLogs, "/workout_logs")
 api.add_resource(WorkoutLogByID, "/workout_logs/<int:id>")
 api.add_resource(History, "/history")
+api.add_resource(CoachResponses, "/coach_responses")
+api.add_resource(CoachResponseByID, "/coach_responses/<int:id>")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
