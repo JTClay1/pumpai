@@ -61,9 +61,11 @@ class Profile(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     gender = db.Column(db.String)
+    birth_date = db.Column(db.String)
     age = db.Column(db.Integer)
     height = db.Column(db.String)
     current_weight = db.Column(db.Float)
+    weight_unit = db.Column(db.String, default="lb")
     fitness_goal = db.Column(db.String)
     dietary_preferences = db.Column(db.String)
     target_calories = db.Column(db.Integer)
@@ -74,6 +76,15 @@ class Profile(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
     user = db.relationship("User", back_populates="profile")
+
+    @validates("weight_unit")
+    def validate_weight_unit(self, key, weight_unit):
+        valid_units = ["lb", "kg"]
+
+        if weight_unit and weight_unit not in valid_units:
+            raise ValueError("Weight unit must be lb or kg.")
+
+        return weight_unit or "lb"
 
 
 class FoodLog(db.Model, SerializerMixin):

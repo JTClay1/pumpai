@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from flask import make_response, request, session
 from flask_restful import Api, Resource
@@ -14,6 +14,24 @@ api = Api(app)
 @app.get("/")
 def index():
     return make_response({"message": "PumpAI API running"}, 200)
+
+
+def calculate_age_from_birth_date(birth_date):
+    if not birth_date:
+        return None
+
+    try:
+        born = datetime.strptime(birth_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError("Birth date must use YYYY-MM-DD format.")
+
+    today = date.today()
+
+    return (
+        today.year
+        - born.year
+        - ((today.month, today.day) < (born.month, born.day))
+    )
 
 
 class Signup(Resource):
@@ -114,9 +132,11 @@ class ProfileResource(Resource):
             profile = Profile(
                 name=data.get("name"),
                 gender=data.get("gender"),
-                age=data.get("age"),
+                birth_date=data.get("birth_date"),
+                age=calculate_age_from_birth_date(data.get("birth_date")),
                 height=data.get("height"),
                 current_weight=data.get("current_weight"),
+                weight_unit=data.get("weight_unit", "lb"),
                 fitness_goal=data.get("fitness_goal"),
                 dietary_preferences=data.get("dietary_preferences"),
                 target_calories=data.get("target_calories"),
@@ -150,9 +170,14 @@ class ProfileResource(Resource):
         data = request.get_json() or {}
 
         for attr in data:
-            if hasattr(profile, attr) and attr != "id" and attr != "user_id":
+            if attr in ["id", "user_id", "age"]:
+                continue
+
+            if hasattr(profile, attr):
                 setattr(profile, attr, data[attr])
 
+        if "birth_date" in data:
+            profile.age = calculate_age_from_birth_date(data.get("birth_date"))
         try:
             db.session.commit()
             return make_response(profile.to_dict(), 200)
