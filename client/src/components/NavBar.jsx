@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 
-function NavBar() {
+function NavBar({ currentUser, onLogout }) {
   return (
     <header className="navbar">
       <NavLink to="/" className="brand">
@@ -13,14 +13,23 @@ function NavBar() {
         <NavLink to="/history">History</NavLink>
         <NavLink to="/coach">Coach’s Corner</NavLink>
 
-        <NavLink
-          to="/auth"
-          className={({ isActive }) =>
-            isActive ? "auth-pill active" : "auth-pill"
-          }
-        >
-          Login / Signup
-        </NavLink>
+        {currentUser ? (
+          <>
+            <span className="user-pill">{currentUser.username}</span>
+            <button className="logout-button" type="button" onClick={onLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavLink
+            to="/auth"
+            className={({ isActive }) =>
+              isActive ? "auth-pill active" : "auth-pill"
+            }
+          >
+            Login / Signup
+          </NavLink>
+        )}
       </nav>
     </header>
   );
