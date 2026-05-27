@@ -28,17 +28,20 @@ with app.app_context():
     profile = Profile(
         name="Josh",
         gender="male",
+        birth_date="1995-05-24",
         age=30,
-        height="5 ft 11 in",
+        height="6 ft 2 in",
         current_weight=229.8,
-        fitness_goal="lose fat and build muscle",
+        weight_unit="lb",
+        fitness_goal="Lose fat and build muscle",
         dietary_preferences="high protein flexible dieting",
         target_calories=2400,
         target_protein=200,
         target_carbs=200,
         target_fat=70,
-        coaching_style="direct but encouraging",
+        coaching_style="Direct but encouraging",
         user_id=user.id,
+
     )
 
     db.session.add(profile)
