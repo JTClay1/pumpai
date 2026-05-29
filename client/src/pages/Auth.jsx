@@ -119,7 +119,7 @@ function Auth({ setCurrentUser }) {
             id="login-username"
             name="username"
             type="text"
-            placeholder="testuser"
+            placeholder="Enter your username..."
             value={loginForm.username}
             onChange={handleLoginChange}
           />
@@ -129,7 +129,7 @@ function Auth({ setCurrentUser }) {
             id="login-password"
             name="password"
             type="password"
-            placeholder="password123"
+            placeholder="Enter your password..."
             value={loginForm.password}
             onChange={handleLoginChange}
           />
