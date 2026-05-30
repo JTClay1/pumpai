@@ -147,11 +147,12 @@ class WorkoutLog(db.Model, SerializerMixin):
 
     @validates("workout_type")
     def validate_workout_type(self, key, workout_type):
-        valid_types = ["cardio", "weighted"]
-        if workout_type not in valid_types:
-            raise ValueError("Workout type must be cardio or weighted.")
-        return workout_type
+        valid_types = ["cardio", "weighted", "rest"]
 
+        if workout_type not in valid_types:
+            raise ValueError("Workout type must be cardio, weighted, or rest.")
+        return workout_type
+            
     @validates("exercise_name")
     def validate_exercise_name(self, key, exercise_name):
         if not exercise_name or not exercise_name.strip():
