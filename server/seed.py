@@ -124,6 +124,13 @@ with app.app_context():
             logged_date="2026-05-24",
             user_id=user.id,
         ),
+        WorkoutLog(
+            workout_type="rest",
+            exercise_name="Rest Day",
+            notes="Recovery day with light walking and mobility.",
+            logged_date="2026-05-25",
+            user_id=user.id,
+        ),
     ]
 
     db.session.add_all(workout_logs)
