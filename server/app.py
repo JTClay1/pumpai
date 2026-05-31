@@ -406,18 +406,8 @@ class History(Resource):
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
 
-        food_limit = request.args.get("food_limit", 10, type=int)
-        workout_limit = request.args.get("workout_limit", 10, type=int)
-        coach_limit = request.args.get("coach_limit", 5, type=int)
-
-        if food_limit < 1 or food_limit > 50:
-            food_limit = 10
-
-        if workout_limit < 1 or workout_limit > 50:
-            workout_limit = 10
-
-        if coach_limit < 1 or coach_limit > 25:
-            coach_limit = 5
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
 
         profile = Profile.query.filter_by(user_id=user_id).first()
 
@@ -425,9 +415,25 @@ class History(Resource):
         workout_query = WorkoutLog.query.filter_by(user_id=user_id)
         coach_query = CoachResponse.query.filter_by(user_id=user_id)
 
-        food_logs = food_query.order_by(FoodLog.id.desc()).limit(food_limit).all()
-        workout_logs = workout_query.order_by(WorkoutLog.id.desc()).limit(workout_limit).all()
-        coach_responses = coach_query.order_by(CoachResponse.id.desc()).limit(coach_limit).all()
+        if start_date:
+            food_query = food_query.filter(FoodLog.logged_date >= start_date)
+            workout_query = workout_query.filter(WorkoutLog.logged_date >= start_date)
+            coach_query = coach_query.filter(CoachResponse.created_at >= start_date)
+
+        if end_date:
+            food_query = food_query.filter(FoodLog.logged_date <= end_date)
+            workout_query = workout_query.filter(WorkoutLog.logged_date <= end_date)
+            coach_query = coach_query.filter(CoachResponse.created_at <= end_date)
+
+        food_logs = food_query.order_by(FoodLog.logged_date.desc(), FoodLog.id.desc()).all()
+        workout_logs = workout_query.order_by(
+            WorkoutLog.logged_date.desc(),
+            WorkoutLog.id.desc()
+        ).all()
+        coach_responses = coach_query.order_by(
+            CoachResponse.created_at.desc(),
+            CoachResponse.id.desc()
+        ).all()
 
         return make_response({
             "profile": profile.to_dict() if profile else None,
@@ -438,6 +444,10 @@ class History(Resource):
                 "food_logs": food_query.count(),
                 "workout_logs": workout_query.count(),
                 "coach_responses": coach_query.count(),
+            },
+            "filters": {
+                "start_date": start_date,
+                "end_date": end_date,
             },
         }, 200)
     
