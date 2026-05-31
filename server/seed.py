@@ -1,6 +1,6 @@
 from app import app
 from config import db
-from models import User, Profile, FoodLog, WorkoutLog, CoachResponse
+from models import User, Profile, FoodLog, WorkoutLog, CoachResponse, EasyLogItem
 
 
 with app.app_context():
@@ -11,6 +11,7 @@ with app.app_context():
     FoodLog.query.delete()
     Profile.query.delete()
     User.query.delete()
+    EasyLogItem.query.delete()
 
     print("Creating demo user...")
 
@@ -159,6 +160,52 @@ with app.app_context():
     ]
 
     db.session.add_all(coach_responses)
+
+    print("Creating easy log items...")
+
+    easy_log_items = [
+        EasyLogItem(
+            name="Chicken rice bowl",
+            item_type="meal",
+            calories=650,
+            servings=1,
+            protein=55,
+            carbs=60,
+            fat=18,
+            fiber=6,
+            sodium=900,
+            serving_size="1 bowl",
+            user_id=user.id,
+        ),
+        EasyLogItem(
+            name="Greek yogurt protein bowl",
+            item_type="meal",
+            calories=420,
+            servings=1,
+            protein=45,
+            carbs=38,
+            fat=8,
+            fiber=4,
+            sodium=250,
+            serving_size="1 bowl",
+            user_id=user.id,
+        ),
+        EasyLogItem(
+            name="Cheddar cheese",
+            item_type="ingredient",
+            calories=110,
+            servings=1,
+            protein=7,
+            carbs=1,
+            fat=9,
+            fiber=0,
+            sodium=180,
+            serving_size="1 serving",
+            user_id=user.id,
+        ),
+    ]
+
+    db.session.add_all(easy_log_items)
 
     db.session.commit()
 
