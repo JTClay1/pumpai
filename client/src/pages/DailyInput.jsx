@@ -227,6 +227,30 @@ function DailyInput() {
     setError("");
   }
 
+  function deleteEasyLogItem(id) {
+    setError("");
+    setMessage("");
+
+    fetch(`${API_URL}/easy_log_items/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (response.ok) {
+          return null;
+        }
+
+        return response.json().then((data) => {
+          throw new Error(data.error || "Unable to delete easy log item.");
+        });
+      })
+      .then(() => {
+        setMessage("Easy Log item deleted.");
+        loadPageData();
+      })
+      .catch((error) => setError(error.message));
+  }
+
   function handleWorkoutChange(event) {
     const { name, value } = event.target;
 
@@ -496,6 +520,14 @@ function DailyInput() {
                   >
                     Add Ingredient
                   </button>
+
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={() => deleteEasyLogItem(item.id)}
+                  >
+                    Delete
+                 </button>
                 </div>
               </article>
             ))}
