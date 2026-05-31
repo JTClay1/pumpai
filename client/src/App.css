@@ -1010,3 +1010,12 @@
 .meal-total-card span {
   color: var(--text-muted);
 }
+
+.danger-button {
+  color: #b42318 !important;
+  background: #ffe7e3 !important;
+}
+
+.danger-button:hover {
+  background: #ffd1ca !important;
+}
