@@ -618,6 +618,24 @@
   max-width: 980px;
   margin: 0 auto;
   width: 100%;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+}
+
+.history-hero .eyebrow {
+  margin: 0 0 0.75rem;
+}
+
+.history-hero h1 {
+  margin: 0 0 1.25rem;
+  line-height: 0.95;
+}
+
+.history-hero p {
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .history-stats {
