@@ -538,7 +538,7 @@ function DailyInput() {
                   type="text"
                   value={foodForm.food_name}
                   onChange={handleFoodChange}
-                  placeholder="Chicken rice bowl"
+                  placeholder=""
                   required
                 />
               </div>
@@ -553,7 +553,7 @@ function DailyInput() {
                     min="0"
                     value={foodForm.calories}
                     onChange={handleFoodChange}
-                    placeholder="650"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -568,7 +568,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.servings}
                     onChange={handleFoodChange}
-                    placeholder="1"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -583,7 +583,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.protein}
                     onChange={handleFoodChange}
-                    placeholder="55"
+                    placeholder=""
                   />
                 </div>
 
@@ -597,7 +597,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.carbs}
                     onChange={handleFoodChange}
-                    placeholder="60"
+                    placeholder=""
                   />
                 </div>
 
@@ -611,7 +611,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.fat}
                     onChange={handleFoodChange}
-                    placeholder="18"
+                    placeholder=""
                   />
                 </div>
 
@@ -625,7 +625,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.fiber}
                     onChange={handleFoodChange}
-                    placeholder="6"
+                    placeholder=""
                   />
                 </div>
 
@@ -639,7 +639,7 @@ function DailyInput() {
                     step="0.1"
                     value={foodForm.sodium}
                     onChange={handleFoodChange}
-                    placeholder="900"
+                    placeholder=""
                   />
                 </div>
 
@@ -664,7 +664,7 @@ function DailyInput() {
                   type="text"
                   value={foodForm.serving_size}
                   onChange={handleFoodChange}
-                  placeholder="1 bowl"
+                  placeholder=""
                 />
               </div>
 
@@ -692,7 +692,7 @@ function DailyInput() {
                   type="text"
                   value={mealForm.meal_name}
                   onChange={handleMealChange}
-                  placeholder="Diet KFC bowl"
+                  placeholder=""
                   required
                 />
               </div>
@@ -718,7 +718,7 @@ function DailyInput() {
                     type="text"
                     value={mealForm.serving_size}
                     onChange={handleMealChange}
-                    placeholder="1 bowl"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -753,7 +753,7 @@ function DailyInput() {
                         onChange={(event) =>
                           handleIngredientChange(index, event)
                         }
-                        placeholder="Chicken thigh"
+                        placeholder=""
                         required
                       />
                     </div>
@@ -769,7 +769,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="220"
+                          placeholder=""
                           required
                         />
                       </div>
@@ -785,7 +785,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="30"
+                          placeholder=""
                         />
                       </div>
 
@@ -800,7 +800,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="0"
+                          placeholder=""
                         />
                       </div>
 
@@ -815,7 +815,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="10"
+                          placeholder=""
                         />
                       </div>
 
@@ -830,7 +830,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="0"
+                          placeholder=""
                         />
                       </div>
 
@@ -845,7 +845,7 @@ function DailyInput() {
                           onChange={(event) =>
                             handleIngredientChange(index, event)
                           }
-                          placeholder="200"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -923,11 +923,7 @@ function DailyInput() {
                   type="text"
                   value={workoutForm.exercise_name}
                   onChange={handleWorkoutChange}
-                  placeholder={
-                    workoutForm.workout_type === "cardio"
-                      ? "Treadmill walk"
-                      : "Dumbbell bench press"
-                  }
+                  placeholder=""
                   required
                 />
               </div>
@@ -952,7 +948,7 @@ function DailyInput() {
                     min="0"
                     value={workoutForm.duration_minutes}
                     onChange={handleWorkoutChange}
-                    placeholder="60"
+                    placeholder=""
                   />
                 </div>
 
@@ -966,7 +962,7 @@ function DailyInput() {
                     step="0.01"
                     value={workoutForm.distance_miles}
                     onChange={handleWorkoutChange}
-                    placeholder="4.1"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -982,7 +978,7 @@ function DailyInput() {
                     step="0.1"
                     value={workoutForm.weight}
                     onChange={handleWorkoutChange}
-                    placeholder="75"
+                    placeholder=""
                   />
                 </div>
 
@@ -995,7 +991,7 @@ function DailyInput() {
                     min="0"
                     value={workoutForm.sets}
                     onChange={handleWorkoutChange}
-                    placeholder="3"
+                    placeholder=""
                   />
                 </div>
 
@@ -1008,7 +1004,7 @@ function DailyInput() {
                     min="0"
                     value={workoutForm.reps}
                     onChange={handleWorkoutChange}
-                    placeholder="8"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -1021,7 +1017,7 @@ function DailyInput() {
                 name="notes"
                 value={workoutForm.notes}
                 onChange={handleWorkoutChange}
-                placeholder="Strong top sets, steady pace, recovery notes..."
+                placeholder=""
                 rows="4"
               />
             </div>
