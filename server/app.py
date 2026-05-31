@@ -5,7 +5,7 @@ from flask_restful import Api, Resource
 from sqlalchemy.exc import IntegrityError
 
 from config import app, db
-from models import User, Profile, FoodLog, WorkoutLog, CoachResponse
+from models import User, Profile, FoodLog, WorkoutLog, CoachResponse, EasyLogItem
 
 
 api = Api(app)
@@ -528,6 +528,73 @@ class CoachResponseByID(Resource):
 
         return make_response({}, 204)
 
+class EasyLogItems(Resource):
+    def get(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        easy_log_items = EasyLogItem.query.filter_by(user_id=user_id).order_by(
+            EasyLogItem.name.asc()
+        ).all()
+
+        return make_response({
+            "easy_log_items": [
+                easy_log_item.to_dict() for easy_log_item in easy_log_items
+            ]
+        }, 200)
+
+    def post(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        data = request.get_json() or {}
+
+        try:
+            easy_log_item = EasyLogItem(
+                name=data.get("name"),
+                item_type=data.get("item_type"),
+                calories=data.get("calories"),
+                servings=data.get("servings", 1),
+                protein=data.get("protein"),
+                carbs=data.get("carbs"),
+                fat=data.get("fat"),
+                fiber=data.get("fiber"),
+                sodium=data.get("sodium"),
+                serving_size=data.get("serving_size"),
+                user_id=user_id,
+            )
+
+            db.session.add(easy_log_item)
+            db.session.commit()
+
+            return make_response(easy_log_item.to_dict(), 201)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+
+class EasyLogItemByID(Resource):
+    def delete(self, id):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        easy_log_item = EasyLogItem.query.filter_by(id=id, user_id=user_id).first()
+
+        if not easy_log_item:
+            return make_response({"error": "Easy log item not found."}, 404)
+
+        db.session.delete(easy_log_item)
+        db.session.commit()
+
+        return make_response({}, 204)
+
 api.add_resource(Signup, "/signup")
 api.add_resource(Login, "/login")
 api.add_resource(CheckSession, "/check_session")
@@ -540,6 +607,8 @@ api.add_resource(WorkoutLogByID, "/workout_logs/<int:id>")
 api.add_resource(History, "/history")
 api.add_resource(CoachResponses, "/coach_responses")
 api.add_resource(CoachResponseByID, "/coach_responses/<int:id>")
+api.add_resource(EasyLogItems, "/easy_log_items")
+api.add_resource(EasyLogItemByID, "/easy_log_items/<int:id>")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
