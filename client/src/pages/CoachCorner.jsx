@@ -91,16 +91,14 @@ function CoachCorner() {
     setError("");
     setMessage("");
 
-    const savedText = buildSavedResponseText();
-
-    if (!savedText) {
-      setError("Add a question, response, or both before saving.");
+    if (!question.trim()) {
+      setError("Ask a question before generating a coach response.");
       return;
     }
 
     setIsSaving(true);
 
-    fetch(`${API_URL}/coach_responses`, {
+    fetch(`${API_URL}/coach`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,21 +106,20 @@ function CoachCorner() {
       credentials: "include",
       body: JSON.stringify({
         request_type: requestType,
-        response_text: savedText,
-        created_at: getTodayDate(),
+        question: question.trim(),
       }),
     })
       .then((response) => {
         if (response.ok) return response.json();
 
         return response.json().then((data) => {
-          throw new Error(data.error || "Unable to save coach response.");
+          throw new Error(data.error || "Unable to generate coach response.");
         });
       })
       .then(() => {
         setQuestion("");
         setResponseText("");
-        setMessage("Coach response saved.");
+        setMessage("Coach response generated and saved.");
         loadCoachResponses();
       })
       .catch((error) => setError(error.message))
@@ -206,14 +203,13 @@ function CoachCorner() {
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="response_text">Coach Response / Notes</label>
-              <textarea
-                id="response_text"
-                value={responseText}
-                onChange={(event) => setResponseText(event.target.value)}
-                rows="7"
-              />
+            <div className="coach-preview-card">
+              <strong>AI Response</strong>
+              <span>Generated responses will be saved automatically.</span>
+              <p>
+                After you ask a question, PumpAI will retrieve your profile, food logs,
+                workout logs, and previous coach responses before generating feedback.
+              </p>
             </div>
 
             <div className="coach-preview-card">
@@ -223,7 +219,7 @@ function CoachCorner() {
             </div>
 
             <button className="primary-action" type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Coach Response"}
+              {isSaving ? "Generating..." : "Generate Coach Response"}
             </button>
           </form>
         </section>
