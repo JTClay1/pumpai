@@ -129,6 +129,15 @@
   font-weight: 800;
 }
 
+.page-card h1,
+.home-summary-card h2,
+.auth-logo-heading h1 {
+  background: linear-gradient(135deg, var(--bubblegum), var(--sky-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .eyebrow {
   color: var(--bubblegum);
   text-transform: uppercase;
@@ -1373,4 +1382,11 @@
   width: auto;
   max-width: min(520px, 90%);
   object-fit: contain;
+}
+
+.auth-logo-heading h1 {
+  background: linear-gradient(135deg, var(--bubblegum), var(--sky-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
