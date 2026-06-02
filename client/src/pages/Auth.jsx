@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
+
 
 const API_URL = "http://127.0.0.1:5555";
 
@@ -98,7 +100,10 @@ function Auth({ setCurrentUser }) {
     <section className="auth-page">
       <div className="auth-intro">
         <p className="eyebrow">Start tracking smarter</p>
-        <h1>Welcome to PumpAI</h1>
+        <div className="auth-logo-heading">
+          <h1>Welcome to</h1>
+          <Logo className="site-logo auth-hero-logo" />
+        </div>
         <p>
           Log in to continue your fitness tracking streak, or create an account
           to start building your profile, food logs, workouts, and coaching
@@ -150,7 +155,7 @@ function Auth({ setCurrentUser }) {
             id="signup-username"
             name="username"
             type="text"
-            placeholder="Choose a username"
+            placeholder="Choose a username..."
             value={signupForm.username}
             onChange={handleSignupChange}
           />
@@ -160,7 +165,7 @@ function Auth({ setCurrentUser }) {
             id="signup-email"
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="Enter your email..."
             value={signupForm.email}
             onChange={handleSignupChange}
           />
@@ -170,7 +175,7 @@ function Auth({ setCurrentUser }) {
             id="signup-password"
             name="password"
             type="password"
-            placeholder="Minimum 6 characters"
+            placeholder="Create a password..."
             value={signupForm.password}
             onChange={handleSignupChange}
           />

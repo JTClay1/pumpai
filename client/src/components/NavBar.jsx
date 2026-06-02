@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
+import Logo from "./Logo";
 
 function NavBar({ currentUser, onLogout }) {
   return (
     <header className="navbar">
-      <NavLink to="/" className="brand">
-        PumpAI
+      <NavLink to="/" className="brand" aria-label="PumpAI home">
+        <Logo className="site-logo nav-logo" />
       </NavLink>
 
       <nav className="nav-links">
