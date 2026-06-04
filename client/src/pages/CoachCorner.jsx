@@ -41,6 +41,25 @@ function formatRequestType(requestType) {
     .join(" ");
 }
 
+function parseCoachResponse(responseText) {
+  const fallback = {
+    question: "",
+    feedback: responseText,
+  };
+
+  if (!responseText) {
+    return fallback;
+  }
+
+  const questionMatch = responseText.match(/Question:\s*([\s\S]*?)(?=\n\n|Backend-calculated|Backend verdict|Coach feedback:|$)/i);
+  const feedbackMatch = responseText.match(/Coach feedback:\s*([\s\S]*)/i);
+
+  return {
+    question: questionMatch ? questionMatch[1].trim() : "",
+    feedback: feedbackMatch ? feedbackMatch[1].trim() : responseText.trim(),
+  };
+}
+
 function CoachCorner() {
   const [coachResponses, setCoachResponses] = useState([]);
   const [requestType, setRequestType] = useState("daily_review");
@@ -233,12 +252,22 @@ function CoachCorner() {
             <ul className="coach-response-list">
               {coachResponses.map((response) => (
                 <li key={response.id}>
-                  <div>
+                  <div className="saved-response-header">
                     <strong>{formatRequestType(response.request_type)}</strong>
                     <span>{response.created_at}</span>
                   </div>
 
-                  <p>{response.response_text}</p>
+                  {parseCoachResponse(response.response_text).question ? (
+                    <div className="saved-question-box">
+                      <span>Question</span>
+                      <p>{parseCoachResponse(response.response_text).question}</p>
+                    </div>
+                  ) : null}
+
+                  <div className="saved-feedback-box">
+                    <span>Coach Feedback</span>
+                    <p>{parseCoachResponse(response.response_text).feedback}</p>
+                  </div>
 
                   <button
                     className="danger-button saved-response-delete"
@@ -248,6 +277,7 @@ function CoachCorner() {
                     Delete
                   </button>
                 </li>
+
               ))}
             </ul>
           ) : (
