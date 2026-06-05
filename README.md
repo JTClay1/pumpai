@@ -624,7 +624,7 @@ From the `server/` folder, run:
 pipenv run pytest
 ```
 
-The tests use a temporary SQLite database through `DATABASE_URI`, create a fresh schema for each test, and set a dummy OpenAI API key. They cover authentication, protected routes, profile age calculation, ownership-based access control, pagination, and CRUD behavior for food and workout logs.
+The tests use a temporary SQLite database through `DATABASE_URI`, create a fresh schema for each test, and set a dummy OpenAI API key. They cover authentication, protected routes, profile age calculation, ownership-based access control, pagination, food and workout CRUD, Easy Log behavior, history filtering, username updates, validation errors, and the Coach's Corner configuration guard.
 
 ---
 

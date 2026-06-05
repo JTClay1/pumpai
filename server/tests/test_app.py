@@ -65,7 +65,12 @@ def signup(
     )
 
 
-def create_food_log(test_client, name="Chicken bowl", calories=500):
+def create_food_log(
+    test_client,
+    name="Chicken bowl",
+    calories=500,
+    logged_date="2026-05-24",
+):
     return test_client.post(
         "/food_logs",
         json={
@@ -78,7 +83,58 @@ def create_food_log(test_client, name="Chicken bowl", calories=500):
             "fiber": 5,
             "sodium": 750,
             "serving_size": "1 bowl",
-            "logged_date": "2026-05-24",
+            "logged_date": logged_date,
+        },
+    )
+
+
+def create_workout_log(
+    test_client,
+    exercise_name="Bench press",
+    workout_type="weighted",
+    logged_date="2026-05-24",
+):
+    return test_client.post(
+        "/workout_logs",
+        json={
+            "workout_type": workout_type,
+            "exercise_name": exercise_name,
+            "duration_minutes": 30 if workout_type == "cardio" else None,
+            "distance_miles": 2 if workout_type == "cardio" else None,
+            "weight": 135 if workout_type == "weighted" else None,
+            "sets": 3 if workout_type == "weighted" else None,
+            "reps": 8 if workout_type == "weighted" else None,
+            "notes": "Test workout",
+            "logged_date": logged_date,
+        },
+    )
+
+
+def create_easy_log_item(test_client, name="Chicken bowl", item_type="meal"):
+    return test_client.post(
+        "/easy_log_items",
+        json={
+            "name": name,
+            "item_type": item_type,
+            "calories": 500,
+            "servings": 1,
+            "protein": 40,
+            "carbs": 45,
+            "fat": 12,
+            "fiber": 5,
+            "sodium": 750,
+            "serving_size": "1 bowl",
+        },
+    )
+
+
+def create_coach_response(test_client, request_type="daily_review"):
+    return test_client.post(
+        "/coach_responses",
+        json={
+            "request_type": request_type,
+            "response_text": "Test coach response",
+            "created_at": "2026-05-24",
         },
     )
 
@@ -248,3 +304,149 @@ def test_session_timeout_clears_stale_session(client):
     with client.session_transaction() as session:
         assert "user_id" not in session
         assert "last_active" not in session
+
+
+def test_easy_log_items_support_create_list_delete_and_owner_scope():
+    alice = app.test_client()
+    bob = app.test_client()
+
+    signup(alice)
+    create_response = create_easy_log_item(alice, name="Greek yogurt bowl")
+
+    assert create_response.status_code == 201
+    easy_log_id = create_response.get_json()["id"]
+
+    list_response = alice.get("/easy_log_items")
+    easy_log_items = list_response.get_json()["easy_log_items"]
+
+    assert list_response.status_code == 200
+    assert len(easy_log_items) == 1
+    assert easy_log_items[0]["name"] == "Greek yogurt bowl"
+
+    signup(bob, username="bob", email="bob@example.com")
+
+    assert bob.delete(f"/easy_log_items/{easy_log_id}").status_code == 404
+    assert alice.delete(f"/easy_log_items/{easy_log_id}").status_code == 204
+    assert alice.get("/easy_log_items").get_json()["easy_log_items"] == []
+
+
+def test_history_filters_by_date_and_only_returns_current_user_data():
+    alice = app.test_client()
+    bob = app.test_client()
+
+    signup(alice)
+    create_food_log(
+        alice,
+        name="Alice early food",
+        calories=400,
+        logged_date="2026-05-24",
+    )
+    create_food_log(
+        alice,
+        name="Alice target day food",
+        calories=500,
+        logged_date="2026-05-25",
+    )
+    create_workout_log(
+        alice,
+        exercise_name="Alice target day workout",
+        logged_date="2026-05-25",
+    )
+    create_coach_response(alice)
+
+    signup(bob, username="bob", email="bob@example.com")
+    create_food_log(
+        bob,
+        name="Bob target day food",
+        calories=900,
+        logged_date="2026-05-25",
+    )
+
+    response = alice.get("/history?start_date=2026-05-25&end_date=2026-05-25")
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data["totals"]["food_logs"] == 1
+    assert data["totals"]["workout_logs"] == 1
+    assert data["totals"]["coach_responses"] == 0
+    assert data["food_logs"][0]["food_name"] == "Alice target day food"
+    assert data["workout_logs"][0]["exercise_name"] == "Alice target day workout"
+    assert all(food["food_name"] != "Bob target day food" for food in data["food_logs"])
+
+
+def test_account_username_update_rejects_duplicate_usernames():
+    alice = app.test_client()
+    bob = app.test_client()
+
+    signup(alice)
+    signup(bob, username="bob", email="bob@example.com")
+
+    duplicate_response = bob.patch("/account", json={"username": "alice"})
+
+    assert duplicate_response.status_code == 422
+    assert duplicate_response.get_json()["error"] == "Username already exists."
+
+    update_response = alice.patch("/account", json={"username": "alice-updated"})
+
+    assert update_response.status_code == 200
+    assert update_response.get_json()["username"] == "alice-updated"
+
+
+def test_validation_errors_are_returned_for_bad_user_and_log_data(client):
+    bad_email_response = signup(
+        client,
+        username="bad-email-user",
+        email="not-an-email",
+    )
+
+    assert bad_email_response.status_code == 422
+    assert bad_email_response.get_json()["error"] == "Email must be valid."
+
+    short_password_response = signup(
+        client,
+        username="short-password-user",
+        email="short@example.com",
+        password="short",
+    )
+
+    assert short_password_response.status_code == 422
+    assert (
+        short_password_response.get_json()["error"]
+        == "Password must be at least 6 characters long."
+    )
+
+    signup(client, username="valid-user", email="valid@example.com")
+
+    bad_food_response = create_food_log(client, calories=-1)
+    bad_workout_response = create_workout_log(
+        client,
+        workout_type="stretching",
+        exercise_name="Invalid workout",
+    )
+
+    assert bad_food_response.status_code == 422
+    assert bad_food_response.get_json()["error"] == "Calories must be 0 or higher."
+    assert bad_workout_response.status_code == 422
+    assert (
+        bad_workout_response.get_json()["error"]
+        == "Workout type must be cardio, weighted, or rest."
+    )
+
+
+def test_coach_route_returns_configuration_error_without_openai_key(
+    client,
+    monkeypatch,
+):
+    signup(client)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    response = client.post(
+        "/coach",
+        json={
+            "request_type": "daily_review",
+            "question": "How did I do today?",
+        },
+    )
+
+    assert response.status_code == 500
+    assert response.get_json()["error"] == "OpenAI API key is not configured."
