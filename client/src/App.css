@@ -19,11 +19,13 @@
 
 .app {
   min-height: 100vh;
+  width: 100%;
   color: var(--text-dark);
   background:
     radial-gradient(circle at top left, rgba(255, 105, 200, 0.35), transparent 32rem),
     radial-gradient(circle at top right, rgba(105, 210, 255, 0.4), transparent 34rem),
     linear-gradient(135deg, #ffe8f7 0%, #e3f7ff 45%, #f8fbff 100%);
+  background-attachment: fixed;
 }
 
 .navbar {
@@ -80,9 +82,16 @@
 }
 
 .page-container {
-  width: min(1100px, 92%);
+  width: min(1500px, calc(100% - 3rem));
   margin: 0 auto;
   padding: 4rem 0;
+}
+
+.home-page,
+.daily-input-page,
+.history-page,
+.coach-page {
+  width: 100%;
 }
 
 .page-card {
@@ -1489,4 +1498,11 @@
 
 .saved-response-delete {
   justify-self: end;
+}
+
+.home-hero,
+.daily-hero,
+.history-hero,
+.coach-hero {
+  max-width: 1100px;
 }
