@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import make_response, request, session
@@ -13,6 +13,8 @@ from models import User, Profile, FoodLog, WorkoutLog, CoachResponse, EasyLogIte
 
 
 api = Api(app)
+
+app.permanent_session_lifetime = timedelta(minutes=15)
 
 load_dotenv()
 
@@ -416,6 +418,34 @@ Workout Logs:
 {format_workout_logs_for_coach(workout_logs)}
 """.strip()
 
+def get_current_user_id():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return None
+
+    last_active = session.get("last_active")
+    now = datetime.utcnow()
+
+    if last_active:
+        try:
+            last_active_time = datetime.fromisoformat(last_active)
+        except ValueError:
+            session.pop("user_id", None)
+            session.pop("last_active", None)
+            return None
+
+        inactive_time = now - last_active_time
+
+        if inactive_time > timedelta(minutes=15):
+            session.pop("user_id", None)
+            session.pop("last_active", None)
+            return None
+
+    session["last_active"] = now.isoformat()
+    session.permanent = True
+
+    return user_id
 
 class Signup(Resource):
     def post(self):
@@ -433,6 +463,8 @@ class Signup(Resource):
             db.session.commit()
 
             session["user_id"] = user.id
+            session["last_active"] = datetime.utcnow().isoformat()
+            session.permanent = True
 
             return make_response(user.to_dict(), 201)
 
@@ -456,6 +488,8 @@ class Login(Resource):
 
         if user and user.authenticate(password):
             session["user_id"] = user.id
+            session["last_active"] = datetime.utcnow().isoformat()
+            session.permanent = True
             return make_response(user.to_dict(), 200)
 
         return make_response({"error": "Invalid username or password."}, 401)
@@ -463,7 +497,7 @@ class Login(Resource):
 
 class CheckSession(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -480,13 +514,14 @@ class Logout(Resource):
     def delete(self):
         if session.get("user_id"):
             session.pop("user_id", None)
+            session.pop("last_active", None)
             return make_response({}, 204)
 
         return make_response({"error": "Unauthorized."}, 401)
     
 class ProfileResource(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -499,7 +534,7 @@ class ProfileResource(Resource):
         return make_response(profile.to_dict(), 200)
 
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -540,7 +575,7 @@ class ProfileResource(Resource):
             return make_response({"error": str(error)}, 422)
 
     def patch(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -571,7 +606,7 @@ class ProfileResource(Resource):
         
 class AccountResource(Resource):
     def patch(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -603,7 +638,7 @@ class AccountResource(Resource):
 
 class FoodLogs(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -634,7 +669,7 @@ class FoodLogs(Resource):
         }, 200)
 
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -668,7 +703,7 @@ class FoodLogs(Resource):
 
 class FoodLogByID(Resource):
     def patch(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -693,7 +728,7 @@ class FoodLogByID(Resource):
             return make_response({"error": str(error)}, 422)
 
     def delete(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -710,7 +745,7 @@ class FoodLogByID(Resource):
     
 class WorkoutLogs(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -741,7 +776,7 @@ class WorkoutLogs(Resource):
         }, 200)
 
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -774,7 +809,7 @@ class WorkoutLogs(Resource):
 
 class WorkoutLogByID(Resource):
     def patch(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -799,7 +834,7 @@ class WorkoutLogByID(Resource):
             return make_response({"error": str(error)}, 422)
 
     def delete(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -816,7 +851,7 @@ class WorkoutLogByID(Resource):
     
 class History(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -868,7 +903,7 @@ class History(Resource):
     
 class CoachResponses(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -901,7 +936,7 @@ class CoachResponses(Resource):
         }, 200)
 
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -928,7 +963,7 @@ class CoachResponses(Resource):
 
 class CoachResponseByID(Resource):
     def delete(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -945,7 +980,7 @@ class CoachResponseByID(Resource):
 
 class Coach(Resource):
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -1028,7 +1063,7 @@ class Coach(Resource):
 
 class EasyLogItems(Resource):
     def get(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -1044,7 +1079,7 @@ class EasyLogItems(Resource):
         }, 200)
 
     def post(self):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
@@ -1078,7 +1113,7 @@ class EasyLogItems(Resource):
 
 class EasyLogItemByID(Resource):
     def delete(self, id):
-        user_id = session.get("user_id")
+        user_id = get_current_user_id()
 
         if not user_id:
             return make_response({"error": "Unauthorized."}, 401)
