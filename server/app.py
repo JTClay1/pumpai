@@ -568,6 +568,38 @@ class ProfileResource(Resource):
         except ValueError as error:
             db.session.rollback()
             return make_response({"error": str(error)}, 422)
+        
+class AccountResource(Resource):
+    def patch(self):
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return make_response({"error": "Unauthorized."}, 401)
+
+        user = User.query.filter_by(id=user_id).first()
+
+        if not user:
+            return make_response({"error": "User not found."}, 404)
+
+        data = request.get_json() or {}
+        username = data.get("username")
+
+        if not username or not username.strip():
+            return make_response({"error": "Username is required."}, 422)
+
+        user.username = username.strip()
+
+        try:
+            db.session.commit()
+            return make_response(user.to_dict(), 200)
+
+        except ValueError as error:
+            db.session.rollback()
+            return make_response({"error": str(error)}, 422)
+
+        except IntegrityError:
+            db.session.rollback()
+            return make_response({"error": "Username already exists."}, 422)
 
 class FoodLogs(Resource):
     def get(self):
@@ -1066,6 +1098,7 @@ api.add_resource(Login, "/login")
 api.add_resource(CheckSession, "/check_session")
 api.add_resource(Logout, "/logout")
 api.add_resource(ProfileResource, "/profile")
+api.add_resource(AccountResource, "/account")
 api.add_resource(FoodLogs, "/food_logs")
 api.add_resource(FoodLogByID, "/food_logs/<int:id>")
 api.add_resource(WorkoutLogs, "/workout_logs")
