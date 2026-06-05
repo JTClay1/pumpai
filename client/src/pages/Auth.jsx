@@ -5,7 +5,7 @@ import Logo from "../components/Logo";
 
 const API_URL = "http://127.0.0.1:5555";
 
-function Auth({ setCurrentUser }) {
+function Auth({ setCurrentUser, onOpenTutorial }) {
   const navigate = useNavigate();
 
   const [loginForm, setLoginForm] = useState({
@@ -92,6 +92,10 @@ function Auth({ setCurrentUser }) {
         setCurrentUser(user);
         setMessage("Account created.");
         navigate("/profile");
+
+        setTimeout(() => {
+          onOpenTutorial();
+        }, 350);
       })
       .catch((error) => setError(error.message));
   }
