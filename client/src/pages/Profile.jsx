@@ -73,13 +73,15 @@ function formatProfileData(data) {
   };
 }
 
-function Profile() {
+function Profile({ currentUser, setCurrentUser }) {
   const [profile, setProfile] = useState(emptyProfile);
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [username, setUsername] = useState(currentUser?.username || "");
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/profile`, {
@@ -153,6 +155,39 @@ function Profile() {
     };
   }
 
+  function handleUsernameSubmit(event) {
+    event.preventDefault();
+
+    setError("");
+    setMessage("");
+    setIsSavingUsername(true);
+
+    fetch(`${API_URL}/account`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+      username,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) return response.json();
+
+        return response.json().then((data) => {
+          throw new Error(data.error || "Unable to update username.");
+        });
+      })
+      .then((user) => {
+        setCurrentUser(user);
+        setUsername(user.username || "");
+        setMessage("Username updated.");
+      })
+      .catch((error) => setError(error.message))
+      .finally(() => setIsSavingUsername(false));
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -220,7 +255,27 @@ function Profile() {
       {error ? <p className="form-error">{error}</p> : null}
       {message ? <p className="form-message">{message}</p> : null}
 
+      <form className="account-form" onSubmit={handleUsernameSubmit}>
+        <h2>Account</h2>
+
+        <div className="form-field">
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </div>
+
+        <button className="primary-action" type="submit" disabled={isSavingUsername}>
+          {isSavingUsername ? "Saving..." : "Update Username"}
+        </button>
+      </form>
+
       <form className="profile-form" onSubmit={handleSubmit}>
+        <h2>Fitness Profile</h2>
         <div className="form-grid">
           <div className="form-field">
             <label htmlFor="name">Name</label>

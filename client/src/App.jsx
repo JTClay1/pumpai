@@ -84,7 +84,7 @@ function App() {
             path="/profile"
             element={
               <RequireAuth currentUser={currentUser} isLoading={isLoading}>
-                <Profile />
+                <Profile currentUser={currentUser} setCurrentUser={setCurrentUser} />
               </RequireAuth>
             }
           />

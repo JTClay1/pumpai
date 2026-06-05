@@ -418,6 +418,27 @@
   text-align: center;
 }
 
+.account-form {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(93, 107, 130, 0.12);
+  text-align: left;
+}
+
+.account-form h2,
+.profile-form h2 {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--bubblegum), var(--sky-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
