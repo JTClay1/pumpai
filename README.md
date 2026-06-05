@@ -67,14 +67,16 @@ The most important design goal was to make the app feel like a real product, not
 - Flask-RESTful
 - Flask-SQLAlchemy
 - Flask-Migrate / Alembic
-- Werkzeug password hashing
+- Flask-Bcrypt password hashing
 - OpenAI API
 
 ### Database
 
 - SQLite local database
 
-For this project, I used a local SQLite database during development. The database file is stored locally in the Flask instance folder and is not committed to GitHub. SQLite was a good fit for the capstone because it allowed fast local development, simple setup, and easy seeding of demo data.
+For local development, PumpAI defaults to a SQLite database. The database file is stored locally in the Flask instance folder and is not committed to GitHub. SQLite was a good fit for the capstone because it allowed fast local development, simple setup, and easy seeding of demo data.
+
+The backend reads `DATABASE_URI` from the environment, so the database can be swapped for another SQL database in a deployed environment without changing application code.
 
 ### AI
 
@@ -112,7 +114,7 @@ The seed file creates demo data for testing the app locally.
 
 Users can sign up, log in, check their current session, and log out.
 
-Passwords are not stored directly. The app uses password hashing through Werkzeug so raw passwords are never saved in the database.
+Passwords are not stored directly. The app uses Flask-Bcrypt password hashing so raw passwords are never saved in the database.
 
 The app also includes a 15-minute inactivity timeout. If a logged-in user's session is stale for more than 15 minutes, the backend clears the session and protected routes return an unauthorized response.
 
@@ -560,6 +562,9 @@ Create a `.env` file in the `server/` folder:
 
 ```txt
 OPENAI_API_KEY=your_openai_api_key_here
+SECRET_KEY=your_flask_secret_key_here
+# Optional: defaults to sqlite:///pumpai.db when omitted
+DATABASE_URI=sqlite:///pumpai.db
 ```
 
 The `.env` file should not be committed to GitHub.
@@ -609,6 +614,20 @@ http://127.0.0.1:5173
 
 ---
 
+## Testing
+
+Backend tests are written with pytest and live in `server/tests/`.
+
+From the `server/` folder, run:
+
+```bash
+pipenv run pytest
+```
+
+The tests use a temporary SQLite database through `DATABASE_URI`, create a fresh schema for each test, and set a dummy OpenAI API key. They cover authentication, protected routes, profile age calculation, ownership-based access control, pagination, and CRUD behavior for food and workout logs.
+
+---
+
 ## Demo Login
 
 After running the seed file, the app includes a demo user:
@@ -624,7 +643,7 @@ This account includes sample profile data, food logs, workout logs, rest day log
 
 ## Environment Variables
 
-The backend requires an OpenAI API key for Coach's Corner.
+The backend requires an OpenAI API key for Coach's Corner. `SECRET_KEY` is recommended for session security. `DATABASE_URI` is optional for local development because the app falls back to SQLite.
 
 Create:
 
@@ -636,6 +655,8 @@ Add:
 
 ```txt
 OPENAI_API_KEY=your_openai_api_key_here
+SECRET_KEY=your_flask_secret_key_here
+DATABASE_URI=sqlite:///pumpai.db
 ```
 
 The app will return an error from the AI coach route if this key is missing.
@@ -647,6 +668,7 @@ The app will return an error from the AI coach route if this key is missing.
 PumpAI includes several basic security patterns:
 
 - Passwords are hashed before storage
+- Password hashing uses Flask-Bcrypt
 - Protected routes check the current session
 - User-owned records are filtered by `user_id`
 - Users cannot access another user's logs through protected routes
@@ -660,6 +682,7 @@ PumpAI includes several basic security patterns:
 PumpAI is currently a local capstone project and has a few intentional limitations:
 
 - Uses a local SQLite database instead of a production database
+- PostgreSQL deployment is supported conceptually through `DATABASE_URI`, but local setup currently documents SQLite only
 - Does not currently include deployed production hosting
 - Does not include password reset
 - Does not include email verification
