@@ -285,7 +285,7 @@ function Profile({ currentUser, setCurrentUser }) {
               type="text"
               value={profile.name}
               onChange={handleChange}
-              placeholder="Josh"
+              placeholder="Name..."
             />
           </div>
 
