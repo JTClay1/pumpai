@@ -13,7 +13,7 @@ import TutorialOverlay from "./components/TutorialOverlay";
 
 import "./App.css";
 
-const API_URL = "http://127.0.0.1:5555";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5555";
 
 // Holds protected routes until the cookie-backed session check has finished.
 function RequireAuth({ currentUser, isLoading, children }) {

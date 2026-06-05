@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 
 
-const API_URL = "http://127.0.0.1:5555";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5555";
 
 function Auth({ setCurrentUser, onOpenTutorial }) {
   const navigate = useNavigate();
