@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:5555";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5555";
 
 function formatWorkoutDetails(workout) {
   // Each workout type displays the fields that matter for that activity.
