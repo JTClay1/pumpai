@@ -9,6 +9,7 @@ import DailyInput from "./pages/DailyInput";
 import History from "./pages/History";
 import CoachCorner from "./pages/CoachCorner";
 import NotFound from "./pages/NotFound";
+import TutorialOverlay from "./components/TutorialOverlay";
 
 import "./App.css";
 
@@ -34,6 +35,7 @@ function RequireAuth({ currentUser, isLoading, children }) {
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/check_session`, {
@@ -58,10 +60,23 @@ function App() {
     }).then(() => setCurrentUser(null));
   }
 
+  function openTutorial() {
+    setShowTutorial(true);
+  }
+
   return (
     <div className="app">
-      <NavBar currentUser={currentUser} onLogout={handleLogout} />
+      <NavBar
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onOpenTutorial={openTutorial}
+      />
 
+      <TutorialOverlay
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
+    
       <main className="page-container">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -72,7 +87,7 @@ function App() {
               currentUser ? (
                 <Navigate to="/history" replace />
               ) : (
-                <Auth setCurrentUser={setCurrentUser} />
+                <Auth setCurrentUser={setCurrentUser} onOpenTutorial={openTutorial} />
               )
             }
           />
