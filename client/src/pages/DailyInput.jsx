@@ -20,6 +20,7 @@ const emptyFoodForm = {
   add_to_easy_log: false,
 };
 
+// Meal ingredients stay flat in the UI and are summed into one FoodLog later.
 const emptyIngredient = {
   name: "",
   calories: "",
@@ -55,6 +56,7 @@ function toNumberOrNull(value) {
 }
 
 function getMealTotals(ingredients) {
+  // Aggregate each ingredient row into the nutrition totals for a saved meal.
   return ingredients.reduce(
     (totals, ingredient) => {
       totals.calories += Number(ingredient.calories) || 0;
@@ -96,6 +98,7 @@ function DailyInput() {
   function loadPageData() {
     setIsLoading(true);
 
+    // Load recent logs and reusable Easy Log items together for the page dashboard.
     Promise.all([
       fetch(`${API_URL}/food_logs?page=1&per_page=5`, {
         credentials: "include",
@@ -186,6 +189,7 @@ function DailyInput() {
   function addEasyLogItemToMeal(item) {
     setFoodMode("meal");
 
+    // Reusable Easy Log items can be inserted as meal ingredients in one click.
     setMealForm({
       ...mealForm,
       ingredients: [
@@ -209,6 +213,7 @@ function DailyInput() {
   function useEasyLogAsSingleFood(item) {
     setFoodMode("single");
 
+    // Reusable Easy Log items can also prefill the simple food log form.
     setFoodForm({
       food_name: item.name,
       calories: item.calories || "",
@@ -255,6 +260,7 @@ function DailyInput() {
     const { name, value } = event.target;
 
     if (name === "workout_type") {
+      // Switching workout type clears fields that no longer apply to that mode.
       setWorkoutForm({
         ...workoutForm,
         workout_type: value,
@@ -276,6 +282,7 @@ function DailyInput() {
   }
 
   function buildFoodPayload() {
+    // Convert form strings into the numeric/null values expected by the API.
     return {
       food_name: foodForm.food_name,
       calories: Number(foodForm.calories),
@@ -293,6 +300,7 @@ function DailyInput() {
   function buildMealPayload() {
     const totals = getMealTotals(mealForm.ingredients);
 
+    // Meals are saved as one food log whose macros come from ingredient totals.
     return {
       food_name: mealForm.meal_name,
       calories: Math.round(totals.calories),
@@ -309,6 +317,7 @@ function DailyInput() {
 
   function buildWorkoutPayload() {
     if (workoutForm.workout_type === "rest") {
+      // Rest days intentionally omit exercise metrics and keep only notes/date.
       return {
         workout_type: "rest",
         exercise_name: "Rest Day",
@@ -336,6 +345,7 @@ function DailyInput() {
   }
 
   function saveEasyLogItem(payload, itemType) {
+    // Easy Log stores repeat meals or ingredients separately from daily logs.
     return fetch(`${API_URL}/easy_log_items`, {
       method: "POST",
       headers: {
@@ -387,6 +397,7 @@ function DailyInput() {
 
     const payload = buildFoodPayload();
 
+    // Save the daily log first, then optionally save the same item for reuse.
     saveFoodLog(payload)
       .then(() => {
         if (foodForm.add_to_easy_log) {
@@ -417,6 +428,7 @@ function DailyInput() {
 
     const payload = buildMealPayload();
 
+    // Meal builder follows the same save flow as single foods.
     saveFoodLog(payload)
       .then(() => {
         if (mealForm.add_to_easy_log) {

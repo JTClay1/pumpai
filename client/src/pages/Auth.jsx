@@ -8,6 +8,7 @@ const API_URL = "http://127.0.0.1:5555";
 function Auth({ setCurrentUser, onOpenTutorial }) {
   const navigate = useNavigate();
 
+  // Login and signup are kept separate so each form can be edited independently.
   const [loginForm, setLoginForm] = useState({
     username: "",
     password: "",
@@ -41,6 +42,7 @@ function Auth({ setCurrentUser, onOpenTutorial }) {
     setError("");
     setMessage("");
 
+    // The backend sets the session cookie; React stores the returned user for routing.
     fetch(`${API_URL}/login`, {
       method: "POST",
       headers: {
@@ -71,6 +73,7 @@ function Auth({ setCurrentUser, onOpenTutorial }) {
     setError("");
     setMessage("");
 
+    // New accounts start on the profile page, then the tutorial opens after navigation.
     fetch(`${API_URL}/signup`, {
       method: "POST",
       headers: {

@@ -14,6 +14,7 @@ function NavBar({ currentUser, onLogout, onOpenTutorial }) {
         <NavLink to="/history">History</NavLink>
         <NavLink to="/coach">Coach’s Corner</NavLink>
 
+        {/* Session state decides whether to show account actions or auth links. */}
         {currentUser ? (
           <>
             <button

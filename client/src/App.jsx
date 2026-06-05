@@ -15,6 +15,7 @@ import "./App.css";
 
 const API_URL = "http://127.0.0.1:5555";
 
+// Holds protected routes until the cookie-backed session check has finished.
 function RequireAuth({ currentUser, isLoading, children }) {
   if (isLoading) {
     return (
@@ -38,6 +39,7 @@ function App() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
+    // Restore an existing server session so refreshes keep the user signed in.
     fetch(`${API_URL}/check_session`, {
       credentials: "include",
     })
@@ -81,6 +83,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
 
+          {/* Authenticated users should not return to the login/signup page. */}
           <Route
             path="/auth"
             element={
@@ -95,6 +98,7 @@ function App() {
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/signup" element={<Navigate to="/auth" replace />} />
 
+          {/* Main app screens require an active session before rendering. */}
           <Route
             path="/profile"
             element={

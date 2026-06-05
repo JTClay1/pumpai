@@ -14,6 +14,7 @@ from models import User, Profile, FoodLog, WorkoutLog, CoachResponse, EasyLogIte
 
 api = Api(app)
 
+# Sessions expire after inactivity so stale browser cookies stop granting access.
 app.permanent_session_lifetime = timedelta(minutes=15)
 
 load_dotenv()
@@ -27,6 +28,7 @@ def index():
 
 
 def calculate_age_from_birth_date(birth_date):
+    # Age is derived server-side from birth_date instead of trusting the client.
     if not birth_date:
         return None
 
@@ -44,6 +46,7 @@ def calculate_age_from_birth_date(birth_date):
     )
 
 def format_profile_for_coach(profile):
+    # Convert the saved profile into readable prompt context for the coach.
     if not profile:
         return "No profile has been created yet."
 
@@ -82,6 +85,7 @@ def format_food_logs_for_coach(food_logs):
     return "\n".join(lines)
 
 def format_food_daily_totals_for_coach(food_logs):
+    # Group food logs by date so the coach can reason about daily totals.
     if not food_logs:
         return "No food totals available."
 
@@ -125,6 +129,7 @@ def format_food_daily_totals_for_coach(food_logs):
     return "\n".join(lines)
 
 def format_daily_target_comparison_for_coach(profile, food_logs):
+    # Compare daily macro totals against the user's saved profile targets.
     if not profile:
         return "No profile targets available."
 
@@ -184,6 +189,7 @@ def format_daily_target_comparison_for_coach(profile, food_logs):
     return "\n".join(lines)
 
 def extract_requested_date(question):
+    # Let users ask about a specific day with ISO or slash-formatted dates.
     if not question:
         return None
 
@@ -211,6 +217,7 @@ def extract_requested_date(question):
 
 
 def build_deterministic_nutrition_summary(profile, food_logs):
+    # Calculate nutrition totals in backend code before the AI sees the prompt.
     if not profile:
         return "No profile targets are available."
 
@@ -265,6 +272,7 @@ Backend-calculated nutrition summary:
 """.strip()
 
 def build_backend_nutrition_verdict(profile, food_logs):
+    # Produce guardrail verdicts the AI must follow when giving advice.
     if not profile or not food_logs:
         return "No nutrition verdict available."
 
@@ -379,6 +387,7 @@ def format_saved_coach_responses_for_coach(coach_responses):
 
 
 def build_coach_prompt(profile, food_logs, workout_logs, request_type, question):
+    # Combine profile/log context with strict instructions against recalculation.
     nutrition_summary = build_deterministic_nutrition_summary(profile, food_logs)
     nutrition_verdict = build_backend_nutrition_verdict(profile, food_logs)
 
@@ -419,6 +428,7 @@ Workout Logs:
 """.strip()
 
 def get_current_user_id():
+    # Central auth helper used by every protected resource.
     user_id = session.get("user_id")
 
     if not user_id:
@@ -438,6 +448,7 @@ def get_current_user_id():
         inactive_time = now - last_active_time
 
         if inactive_time > timedelta(minutes=15):
+            # Clear both keys when the inactivity timeout has passed.
             session.pop("user_id", None)
             session.pop("last_active", None)
             return None
@@ -452,6 +463,7 @@ class Signup(Resource):
         data = request.get_json() or {}
 
         try:
+            # Creating a user also hashes the password through the model setter.
             user = User(
                 username=data.get("username"),
                 email=data.get("email"),
@@ -547,6 +559,7 @@ class ProfileResource(Resource):
         data = request.get_json() or {}
 
         try:
+            # Saved age is recalculated from birth_date to keep it consistent.
             profile = Profile(
                 name=data.get("name"),
                 gender=data.get("gender"),
@@ -587,6 +600,7 @@ class ProfileResource(Resource):
 
         data = request.get_json() or {}
 
+        # Only mutable profile fields are patched; identifiers and age are protected.
         for attr in data:
             if attr in ["id", "user_id", "age"]:
                 continue
@@ -646,6 +660,7 @@ class FoodLogs(Resource):
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
 
+        # Clamp pagination so the endpoint stays predictable for the client.
         if page < 1:
             page = 1
 
@@ -865,6 +880,7 @@ class History(Resource):
         workout_query = WorkoutLog.query.filter_by(user_id=user_id)
         coach_query = CoachResponse.query.filter_by(user_id=user_id)
 
+        # Optional date filters apply to every history category consistently.
         if start_date:
             food_query = food_query.filter(FoodLog.logged_date >= start_date)
             workout_query = workout_query.filter(WorkoutLog.logged_date >= start_date)
@@ -1005,6 +1021,7 @@ class Coach(Resource):
         food_query = FoodLog.query.filter_by(user_id=user_id)
         workout_query = WorkoutLog.query.filter_by(user_id=user_id)
 
+        # Date-specific questions narrow the AI context to that exact day.
         if requested_date:
             food_query = food_query.filter(FoodLog.logged_date == requested_date)
             workout_query = workout_query.filter(WorkoutLog.logged_date == requested_date)
@@ -1028,6 +1045,7 @@ class Coach(Resource):
         )
 
         try:
+            # The stored response includes deterministic backend context plus AI feedback.
             response = client.responses.create(
                 model="gpt-5.4-mini",
                 input=prompt,
@@ -1087,6 +1105,7 @@ class EasyLogItems(Resource):
         data = request.get_json() or {}
 
         try:
+            # Easy Log records are reusable templates, not daily activity logs.
             easy_log_item = EasyLogItem(
                 name=data.get("name"),
                 item_type=data.get("item_type"),

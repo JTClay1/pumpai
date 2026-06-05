@@ -1,5 +1,6 @@
 import Logo from "../components/Logo";
 
+// Homepage cards summarize the core product workflows.
 const features = [
   {
     title: "Track Your Meals",
