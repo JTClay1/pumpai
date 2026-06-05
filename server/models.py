@@ -8,6 +8,7 @@ from config import db, bcrypt
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
+    # Avoid leaking password hashes or recursively serializing related objects.
     serialize_rules = (
         "-_password_hash",
         "-profile.user",
@@ -55,6 +56,7 @@ class User(db.Model, SerializerMixin):
 
     @hybrid_property
     def password_hash(self):
+        # Password hashes should only ever be written, never read back.
         raise AttributeError("Password hashes may not be viewed.")
 
     @password_hash.setter
@@ -117,6 +119,7 @@ class Profile(db.Model, SerializerMixin):
         unique=True,
     )
 
+    # Each user owns one profile that stores personal targets and preferences.
     user = db.relationship("User", back_populates="profile")
 
     @validates("weight_unit")
@@ -150,6 +153,7 @@ class FoodLog(db.Model, SerializerMixin):
     logged_date = db.Column(db.String, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    # Food logs belong to one user and feed history plus coach calculations.
     user = db.relationship("User", back_populates="food_logs")
 
     @validates("food_name")
@@ -194,6 +198,7 @@ class WorkoutLog(db.Model, SerializerMixin):
     logged_date = db.Column(db.String, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    # Workout logs track cardio, weighted sessions, and rest days together.
     user = db.relationship("User", back_populates="workout_logs")
 
     @validates("workout_type")
@@ -227,6 +232,7 @@ class CoachResponse(db.Model, SerializerMixin):
     created_at = db.Column(db.String, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    # Saved coach responses preserve generated feedback for the history pages.
     user = db.relationship("User", back_populates="coach_responses")
 
     @validates("request_type")
@@ -265,6 +271,7 @@ class EasyLogItem(db.Model, SerializerMixin):
     serving_size = db.Column(db.String)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    # Easy Log items are reusable foods/meals that can prefill daily tracking.
     user = db.relationship("User", back_populates="easy_log_items")
 
     @validates("name")

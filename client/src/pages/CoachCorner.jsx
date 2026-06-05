@@ -42,6 +42,7 @@ function formatRequestType(requestType) {
 }
 
 function parseCoachResponse(responseText) {
+  // Saved responses contain backend summary text plus coach feedback in one field.
   const fallback = {
     question: "",
     feedback: responseText,
@@ -77,6 +78,7 @@ function CoachCorner() {
   function loadCoachResponses() {
     setIsLoading(true);
 
+    // Pull the latest saved coaching history for the right-side response list.
     fetch(`${API_URL}/coach_responses?page=1&per_page=20`, {
       credentials: "include",
     })
@@ -93,6 +95,7 @@ function CoachCorner() {
   }
 
   function buildSavedResponseText() {
+    // Kept for manually saved notes if the UI re-enables direct response editing.
     if (question.trim() && responseText.trim()) {
       return `Question: ${question.trim()}\n\nResponse: ${responseText.trim()}`;
     }
@@ -117,6 +120,7 @@ function CoachCorner() {
 
     setIsSaving(true);
 
+    // The backend assembles profile/log context and saves the generated response.
     fetch(`${API_URL}/coach`, {
       method: "POST",
       headers: {

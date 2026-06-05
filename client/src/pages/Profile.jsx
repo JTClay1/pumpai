@@ -21,6 +21,7 @@ const emptyProfile = {
 
 const heightOptions = [];
 
+// Build every height value shown in the profile selector.
 for (let feet = 3; feet <= 8; feet += 1) {
   for (let inches = 0; inches <= 11; inches += 1) {
     if (feet === 8 && inches > 0) break;
@@ -47,6 +48,7 @@ function calculateAge(birthDate) {
 }
 
 function getMacroCalories(profile) {
+  // Protein/carbs are 4 calories per gram; fat is 9 calories per gram.
   const protein = Number(profile.target_protein) || 0;
   const carbs = Number(profile.target_carbs) || 0;
   const fat = Number(profile.target_fat) || 0;
@@ -55,6 +57,7 @@ function getMacroCalories(profile) {
 }
 
 function formatProfileData(data) {
+  // Convert nullable API fields into controlled-input friendly empty strings.
   return {
     name: data.name || "",
     gender: data.gender || "",
@@ -84,6 +87,7 @@ function Profile({ currentUser, setCurrentUser }) {
   const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   useEffect(() => {
+    // A missing profile is valid for new users, so 404 becomes an empty form.
     fetch(`${API_URL}/profile`, {
       credentials: "include",
     })
@@ -110,6 +114,7 @@ function Profile({ currentUser, setCurrentUser }) {
     const { name, value } = event.target;
 
     if (name === "birth_date") {
+      // Show age immediately while the backend remains the source of saved age.
       setProfile({
         ...profile,
         birth_date: value,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Logo from "./Logo";
 
+// Ordered steps for the guided first-run walkthrough.
 const tutorialSteps = [
   {
     title: "Build your profile",
@@ -51,6 +52,7 @@ function TutorialOverlay({ isOpen, onClose }) {
 
   function handleNext() {
     if (isLastStep) {
+      // Finishing resets the tour so it starts at the beginning next time.
       setStepIndex(0);
       onClose();
       return;

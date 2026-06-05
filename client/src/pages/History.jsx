@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 const API_URL = "http://127.0.0.1:5555";
 
 function formatWorkoutDetails(workout) {
+  // Each workout type displays the fields that matter for that activity.
   if (workout.workout_type === "rest") {
     return workout.notes || "Recovery day";
   }
@@ -34,6 +35,7 @@ function formatDate(dateString) {
 }
 
 function groupFoodLogsByDate(foodLogs) {
+  // Turn flat API rows into date buckets with daily macro totals.
   return foodLogs.reduce((groups, food) => {
     const date = food.logged_date || "No date";
 
@@ -61,6 +63,7 @@ function groupFoodLogsByDate(foodLogs) {
 }
 
 function groupWorkoutLogsByDate(workoutLogs) {
+  // Turn flat workout rows into date buckets with type counts.
   return workoutLogs.reduce((groups, workout) => {
     const date = workout.logged_date || "No date";
 
@@ -183,6 +186,7 @@ function History() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // The history endpoint returns profile, logs, coach responses, and counts.
     fetch(`${API_URL}/history`, {
       credentials: "include",
     })
@@ -199,6 +203,7 @@ function History() {
   }, []);
 
   function toggleFoodDate(date) {
+    // Open state is stored by date so each day card expands independently.
     setOpenFoodDates({
       ...openFoodDates,
       [date]: !openFoodDates[date],

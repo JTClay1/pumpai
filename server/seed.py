@@ -4,6 +4,7 @@ from models import User, Profile, FoodLog, WorkoutLog, CoachResponse, EasyLogIte
 
 
 with app.app_context():
+    # Seed starts from a clean slate so demo data stays predictable.
     print("Clearing database...")
 
     CoachResponse.query.delete()
@@ -26,6 +27,7 @@ with app.app_context():
 
     print("Creating profile...")
 
+    # The profile gives the demo account targets for history and coach flows.
     profile = Profile(
         name="Josh",
         gender="male",
@@ -49,6 +51,7 @@ with app.app_context():
 
     print("Creating food logs...")
 
+    # Food logs demonstrate daily nutrition totals and coach summaries.
     food_logs = [
         FoodLog(
             food_name="Chicken rice bowl",
@@ -95,6 +98,7 @@ with app.app_context():
 
     print("Creating workout logs...")
 
+    # Mixed workout types exercise cardio, weighted, and rest-day displays.
     workout_logs = [
         WorkoutLog(
             workout_type="cardio",
@@ -138,6 +142,7 @@ with app.app_context():
 
     print("Creating saved coach responses...")
 
+    # Saved responses make the history and coach pages useful immediately.
     coach_responses = [
         CoachResponse(
             request_type="daily_review",
@@ -163,6 +168,7 @@ with app.app_context():
 
     print("Creating easy log items...")
 
+    # Easy Log examples can be reused from the Daily Input page.
     easy_log_items = [
         EasyLogItem(
             name="Chicken rice bowl",

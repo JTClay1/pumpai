@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
+# Prefer an external database URL, but default to local SQLite for development.
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URI",
     "sqlite:///pumpai.db"
@@ -21,6 +22,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 
+# Extensions are initialized here and imported by app.py/models.py as shared services.
 db.init_app(app)
 migrate.init_app(app, db)
 bcrypt.init_app(app)
