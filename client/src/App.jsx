@@ -88,7 +88,7 @@ function App() {
             path="/auth"
             element={
               currentUser ? (
-                <Navigate to="/history" replace />
+                <Navigate to="/profile" replace />
               ) : (
                 <Auth setCurrentUser={setCurrentUser} onOpenTutorial={openTutorial} />
               )
