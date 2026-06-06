@@ -27,4 +27,20 @@ db.init_app(app)
 migrate.init_app(app, db)
 bcrypt.init_app(app)
 
-CORS(app, supports_credentials=True)
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://127.0.0.1:5173")
+
+CORS(
+    app,
+    origins=[
+        FRONTEND_URL,
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ],
+    supports_credentials=True,
+)
+
+is_render = os.environ.get("RENDER") == "true"
+
+app.config["SESSION_COOKIE_SAMESITE"] = "None" if is_render else "Lax"
+app.config["SESSION_COOKIE_SECURE"] = is_render
+app.config["SESSION_COOKIE_HTTPONLY"] = True
