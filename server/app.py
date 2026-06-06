@@ -387,32 +387,59 @@ def format_saved_coach_responses_for_coach(coach_responses):
 
 
 def build_coach_prompt(profile, food_logs, workout_logs, request_type, question):
-    # Combine profile/log context with strict instructions against recalculation.
+    # Combine saved profile/log context with strict instructions against recalculation.
+    # The profile is the core of PumpAI. If it exists, the AI must use it instead of
+    # asking the user for basics already saved in the database.
     nutrition_summary = build_deterministic_nutrition_summary(profile, food_logs)
     nutrition_verdict = build_backend_nutrition_verdict(profile, food_logs)
+    profile_context = format_profile_for_coach(profile)
+    food_totals_context = format_food_daily_totals_for_coach(food_logs)
+    target_comparison_context = format_daily_target_comparison_for_coach(profile, food_logs)
+    food_items_context = format_food_names_for_coach(food_logs)
+    workout_context = format_workout_logs_for_coach(workout_logs)
 
     return f"""
-You are PumpAI, a fitness and nutrition coaching assistant.
+You are PumpAI, a practical fitness and nutrition coaching assistant.
 
-The backend has already calculated the user's nutrition totals and verdict.
-You are not allowed to recalculate or reinterpret calories, carbs, protein, fat, fiber, or sodium.
+Highest-priority saved profile rules:
+- The saved profile below is official backend data for the logged-in user.
+- If the saved profile contains age, gender, height, current weight, goal, dietary preferences, or calorie/macro targets, use those values directly.
+- Do not ask the user for age, sex/gender, height, weight, goal, activity context, or calorie targets when those values are present in the saved profile.
+- If the user asks whether their calorie target is good, answer using the saved profile and target calories. You may explain that a more precise target would benefit from trend data, but do not claim you lack the basic profile information.
+- If the profile exists, never say "I would need your age, sex, height, weight" or similar boilerplate.
+- Speak to the user as someone whose profile and logs are already saved in PumpAI.
 
-Your job:
-- Give practical coaching advice based on the backend nutrition verdict.
-- Keep the response concise.
-- Do not state exact calorie, protein, carb, fat, fiber, or sodium totals.
+Nutrition guardrails:
+- The backend has already calculated nutrition totals, net carbs, and verdicts.
+- You are not allowed to recalculate or contradict backend-calculated calories, carbs, protein, fat, fiber, sodium, or net carbs.
+- Do not state exact nutrition totals unless the user specifically asks for numbers.
 - Do not say calories were high, over target, or poor if the backend verdict says calories were under target.
 - Do not say carbs were high, over target, or a problem if the backend verdict says net carbs were under target.
 - Do not treat high fiber as the same thing as high sugar or starch.
+- Use net carbs for carb-target interpretation when fiber is high.
 - Do not contradict the backend verdict.
-- Do not provide medical diagnosis or treatment advice.
+
+Coaching style:
+- Keep feedback concise, direct, and user-facing.
+- Avoid exposing backend jargon such as "backend verdict" or "deterministic nutrition summary" in the response.
+- Give practical coaching advice based on the saved profile, food logs, workout logs, and backend nutrition verdict.
 - If the user asks about pain, injury, medication, eating disorders, or dangerous symptoms, tell them to consult a qualified professional.
+- Do not provide medical diagnosis or treatment advice.
 
 Request Type:
 {request_type}
 
 User Question:
 {question}
+
+Saved User Profile:
+{profile_context}
+
+Daily Food Totals:
+{food_totals_context}
+
+Daily Target Comparison:
+{target_comparison_context}
 
 Official Backend Nutrition Summary:
 {nutrition_summary}
@@ -421,10 +448,10 @@ Official Backend Nutrition Verdict:
 {nutrition_verdict}
 
 Food Items Logged:
-{format_food_names_for_coach(food_logs)}
+{food_items_context}
 
 Workout Logs:
-{format_workout_logs_for_coach(workout_logs)}
+{workout_context}
 """.strip()
 
 def get_current_user_id():
@@ -1056,12 +1083,12 @@ class Coach(Resource):
             nutrition_summary = build_deterministic_nutrition_summary(profile, food_logs)
             nutrition_verdict = build_backend_nutrition_verdict(profile, food_logs)
 
+            # Store only user-facing text. The backend summary/verdict stays in the
+            # prompt as AI guardrails, but it should not clutter the UI response.
             final_response_text = (
                 f"Question: {question}\n\n"
-                f"{nutrition_summary}\n\n"
-                f"Backend verdict:\n{nutrition_verdict}\n\n"
                 f"Coach feedback:\n{ai_advice}"
-            )                                                          
+            )
 
             coach_response = CoachResponse(
                 request_type=request_type,
