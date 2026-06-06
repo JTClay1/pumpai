@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://pumpai.onrender.com/:path*"
+      "source": "/api",
+      "destination": "https://pumpai.onrender.com/"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://pumpai.onrender.com/$1"
     },
     {
       "source": "/(.*)",
